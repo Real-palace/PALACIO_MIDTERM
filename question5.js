@@ -1,47 +1,49 @@
-const { Sequelize, DataTypes } = require('sequelize');
-
-const sequelize = new Sequelize('database', 'username', 'password', {
-    host: 'localhost',
-    dialect: 'mysql'
-});
-
-const User = sequelize.define('User', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    status: {
-        type: DataTypes.STRING,
-        allowNull: false
-    }
-}, { timestamps: false });
-
 const express = require('express');
+const { Sequelize, DataTypes } = require('sequelize');
 const app = express();
-const PORT = 3000;
+const port = 3001;
 
+// Set up Sequelize connection
+const sequelize = new Sequelize('mysql://root:@localhost:3306/mydatabase'); // No password
+
+// Define the User model
+const User = sequelize.define('User', {
+id: {
+type: DataTypes.INTEGER,
+primaryKey: true,
+autoIncrement: true
+},
+name: {
+type: DataTypes.STRING,
+allowNull: false
+},
+email: {
+type: DataTypes.STRING,
+allowNull: false
+},
+status: {
+type: DataTypes.STRING,
+defaultValue: 'active'
+}
+});
+
+// Route to fetch all users
 app.get('/users', async (req, res) => {
-    try {
-        const users = await User.findAll();
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: 'Database error' });
-    }
+try {
+const users = await User.findAll();
+res.json(users);
+} catch (err) {
+res.status(500).json({ message: 'Error fetching users', error: err });
+}
 });
 
-sequelize.sync().then(() => {
-    console.log('Database synced');
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Start the server
+app.listen(port, async () => {
+try {
+await sequelize.authenticate();
+console.log('Database connected');
+console.log(`Server is running on http://localhost:${port}`);
+} catch (err) {
+console.error('Unable to connect to the database:', err);
+}
 });
